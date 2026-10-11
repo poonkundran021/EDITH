@@ -75,7 +75,23 @@ Use your actual serial port if different. If connection fails, hold BOOT, briefl
 
 See [SETUP.md](SETUP.md) for pin mapping, calibration and the original Sites deployment. Those hosting/build commands apply to `website`; the Vercel instructions above apply to `vercel-dashboard`.
 
-## Hardware status
+## Free Tamil Nadu weather assistant
+
+Use **Ask weather** on the Vercel dashboard. Select English or Tamil, ask about a town and date, or use the location search/date picker. Follow-up questions retain the last location/date; explicitly naming a new place or date replaces that part of the context.
+
+- Internet weather comes directly from Open-Meteo in the visitor's browser. It never uses the ESP32 sensor values. Current values are weather-model estimates, not a local observation station measurement.
+- GeoNames results are restricted to `country_code=IN` and `admin1=Tamil Nadu`. Common English/Tamil place aliases are understood; use the search field for other towns. Ambiguous results require a selection.
+- Forecasts cover today through 15 days ahead. Later dates get an availability explanation rather than an invented forecast. Dates use IST; numeric dates use day/month/year. This is a weather-specific parser, not an unrestricted LLM chatbot.
+- English/Tamil speech prefers an installed device voice. When unavailable, the bundled eSpeak NG worker synthesizes a more robotic voice locally. No speech API key or subscription is used. Browsers may require tapping **Listen** to permit audio. The local voice download is approximately 3.3 MB, cached as static assets.
+- Weather responses are cached in the browser session for up to 10 minutes, and place searches for up to a day. Chats are not persisted or sent to an AI provider; place queries and coordinates are sent to Open-Meteo. A browser-provided speech voice may use its platform's speech service; the eSpeak fallback stays on-device.
+
+**API setup: none.** Do not register for a paid API. The endpoints are `https://api.open-meteo.com/v1/forecast` and `https://geocoding-api.open-meteo.com/v1/search`. See [forecast docs](https://open-meteo.com/en/docs), [geocoding docs](https://open-meteo.com/en/docs/geocoding-api), and [free-service terms](https://open-meteo.com/en/terms).
+
+This educational/non-commercial version uses free services, with no paid AI or TTS fallback. Open-Meteo currently limits free usage to fewer than 10,000 calls/day, 5,000/hour and 600/minute (some requests count fractionally/more than once). Vercel Hobby and the original Sites receiver have their own limits. Free service availability or future pricing cannot be guaranteed; do not upgrade/enable paid billing if zero service spend is required. Unavailable weather produces an error rather than fabricated readings or a paid fallback.
+
+Bundled speech license, source archive, and build-source references are under `vercel-dashboard/public/speech/`. The eSpeak worker and `lib/local-speech.ts` adapter are GPL-3.0-or-later. Weather data attribution is shown in the interface.
+
+## Last sensor test
 
 The latest physical test before publication received no valid DHT11 humidity in eight fresh samples, while BMP280 and MPU6050 responded. A missing reading does not by itself prove the DHT11 is damaged. Check its power, ground, GPIO4 data connection and exact sensor type.
 

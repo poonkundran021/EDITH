@@ -21,5 +21,8 @@ firmware/diagnostics/src/wifi_config.h
 *.tsbuildinfo
 *.zip
 *.tar.gz
+!vercel-dashboard/public/speech/espeak-ng-source.tar.gz
+vercel-dashboard/AGENTS.md
+vercel-dashboard/CLAUDE.md
 *.log
 .DS_Store
