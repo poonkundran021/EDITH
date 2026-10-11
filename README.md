@@ -50,13 +50,14 @@ Sign in to the intended **Vercel account**; GitHub CLI login does not choose the
 CLI alternative, from `vercel-dashboard`:
 
 ```powershell
-npx vercel@latest login
-npx vercel@latest whoami
-npx vercel@latest link
-npx vercel@latest --prod
+$edithVercelProfile = Join-Path $env:USERPROFILE '.vercel-edith'
+npx vercel@latest login --global-config $edithVercelProfile
+npx vercel@latest whoami --global-config $edithVercelProfile
+npx vercel@latest link --global-config $edithVercelProfile
+npx vercel@latest --prod --global-config $edithVercelProfile
 ```
 
-Select the intended account/team during linking. Do not reuse another project's `.vercel` directory. GitHub import is the simplest way to enable automatic deployments on later pushes.
+The separate global config keeps EDITH's Vercel login separate from your default CLI account. Use the same `--global-config` path for subsequent EDITH Vercel commands. Select the intended account/team during linking and use `./` when asked for the code directory (you are already inside `vercel-dashboard`). Do not reuse another project's `.vercel` directory. GitHub import is the simplest way to enable automatic deployments on later pushes.
 
 ## ESP32 upload
 
