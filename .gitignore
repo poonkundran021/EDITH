@@ -1,0 +1,25 @@
+# Local device credentials
+firmware/EDITH/config.h
+firmware/diagnostics/src/wifi_config.h
+**/.env*
+**/.dev.vars*
+!**/.env.example
+# Dependencies, generated output and local hosting state
+**/node_modules/
+**/.pio/
+**/.next/
+**/.vinext/
+**/dist/
+**/.wrangler/
+**/.vercel/
+**/.sites-runtime/
+**/.agents/
+**/.codex/
+**/__pycache__/
+**/outputs/
+**/work/
+*.tsbuildinfo
+*.zip
+*.tar.gz
+*.log
+.DS_Store
