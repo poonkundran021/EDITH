@@ -11,7 +11,7 @@ export default function WeatherChat(){
  const ta=lang==='ta';
  const voice=voices.find(v=>v.lang.toLowerCase()===(ta?'ta-in':'en-in'))??voices.find(v=>v.lang.toLowerCase().startsWith(lang));
  useEffect(()=>{alive.current=true;const synth=window.speechSynthesis;const update=()=>setVoices(synth?.getVoices()??[]);update();synth?.addEventListener('voiceschanged',update);return()=>{alive.current=false;synth?.removeEventListener('voiceschanged',update);synth?.cancel();stopLocalSpeech();};},[]);
- useEffect(()=>{bottom.current?.scrollIntoView({behavior:'smooth',block:'nearest'});},[messages,busy]);
+ useEffect(()=>{const log=bottom.current?.parentElement;if(messages.length&&log)log.scrollTo({top:log.scrollHeight,behavior:'smooth'});},[messages,busy]);
  useEffect(()=>{
    let active=true;setPlaces([]);setSearchNote('');
    if(query.trim().length<3){setSearching(false);return;}
