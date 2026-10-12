@@ -31,3 +31,15 @@ export function makeSnapshot(data: Telemetry | null, receivedAt: number | null, 
   const ageMs = receivedAt === null ? null : Math.max(0, now - receivedAt, data ? now - data.capturedAt : 0);
   return {data, receivedAt, ageMs, online: ageMs !== null && ageMs < STALE_MS};
 }
+
+// On the browser, receivedAt represents the sample's freshness origin in the
+// local clock. Duplicate/empty responses must not clear values or renew their age.
+export function mergeClientSnapshot(previous: Snapshot, incoming: Snapshot, now: number): Snapshot {
+  if (!incoming.data || incoming.ageMs === null) return previous;
+  if (previous.data?.boot === incoming.data.boot && incoming.data.seq <= previous.data.seq) return previous;
+  return {...incoming, receivedAt: now - incoming.ageMs};
+}
+
+export function isClientSnapshotFresh(snapshot: Snapshot, now: number): boolean {
+  return snapshot.data !== null && snapshot.receivedAt !== null && now - snapshot.receivedAt < STALE_MS;
+}

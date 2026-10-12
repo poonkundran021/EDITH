@@ -1,6 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
+/* Reserve the connection notice's space so intermittent packets cannot move the page. */
+.telemetry-status{display:grid;grid-template-columns:16px minmax(0,1fr) auto;align-items:center;gap:10px;height:72px;margin-bottom:16px;padding:12px 16px;border:1px solid #354937;border-radius:10px;color:#b8c9af;background:#17241b;font-size:12px;line-height:1.6}
+.telemetry-status.waiting{color:#dcc29f;border-color:#66523b;background:#29251c}
+.telemetry-status.demo{color:#eed799}
+.telemetry-status button{display:flex;align-items:center;gap:5px;background:none;border:0;color:inherit;font-size:10px;white-space:nowrap}
+.readings-stale .metric-value{color:#b5bbaa}
+.connection strong{font-variant-numeric:tabular-nums}
+@media(max-width:700px){.telemetry-status{height:112px;padding:10px 12px;font-size:11px;gap:8px}.telemetry-status button{font-size:9px}}
+
 /* Explicit, user-initiated speech input. */
 .weather-compose>.weather-dictation{align-items:center;flex-wrap:wrap;margin-top:12px;gap:12px}
 .weather-compose>.weather-dictation>.weather-mic{display:flex;gap:8px;align-items:center;justify-content:center;width:auto;min-height:44px;height:auto;padding:10px 13px;border:1px solid #6d9060;background:#253e29;color:#d9f2ca;font-size:11px;line-height:1.5;text-align:left}
