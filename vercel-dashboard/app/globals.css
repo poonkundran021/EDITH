@@ -1,6 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
+.chat-entry{display:inline-flex;align-items:center;gap:7px;padding:9px 12px;border-radius:8px;border:1px solid #88af76;background:#c2edab;color:#19361e;font-size:12px;font-weight:600;white-space:nowrap}
+.weather-history-control{border:1px solid #4c6543;background:#253b26;border-radius:10px;padding:12px}
+.weather-history-control label{display:flex;gap:8px;align-items:center;font-size:12px;line-height:1.6}.weather-history-control input{accent-color:#c2edab}.weather-history-control p{font-size:10px;line-height:1.8;color:#b6cda7;margin-top:8px}
+.weather-history-table{margin-top:14px;border:1px solid #567346;border-radius:8px;padding:12px;background:#14251a;font-size:11px}.weather-history-table summary{cursor:pointer;color:#d5edc3;line-height:1.7}.weather-history-table>div{overflow-x:auto}.weather-history-table table{width:100%;border-collapse:collapse;margin:12px 0}.weather-history-table caption{text-align:left;font-size:10px;color:#a5bea0;padding-bottom:10px}.weather-history-table th,.weather-history-table td{text-align:left;padding:8px 6px;border-bottom:1px solid #3e5338;white-space:nowrap}.weather-history-table small{display:block;font-size:10px;line-height:1.7;margin-top:8px;color:#b5c8a8}.weather-history-table a{color:#c2edab}
+@media(max-width:700px){.top-actions>.public-label{display:none}.chat-entry{font-size:11px;padding:8px}}
+
 /* Reserve the connection notice's space so intermittent packets cannot move the page. */
 .telemetry-status{display:grid;grid-template-columns:16px minmax(0,1fr) auto;align-items:center;gap:10px;height:72px;margin-bottom:16px;padding:12px 16px;border:1px solid #354937;border-radius:10px;color:#b8c9af;background:#17241b;font-size:12px;line-height:1.6}
 .telemetry-status.waiting{color:#dcc29f;border-color:#66523b;background:#29251c}

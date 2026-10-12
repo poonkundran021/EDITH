@@ -1,9 +1,10 @@
 import * as chrono from 'chrono-node';
 import { z } from 'zod';
+import type {HistorySummary} from './weather-history';
 
 export type Language = 'en' | 'ta';
 export type Place = { id: number; name: string; latitude: number; longitude: number; admin1: string; country_code: string; admin2?: string };
-export type WeatherReply = { text: string; place?: Place; date?: string; choices?: Place[]; source?: string; fetchedAt?: string; kind: 'answer' | 'clarify' | 'unavailable' };
+export type WeatherReply = { text: string; place?: Place; date?: string; choices?: Place[]; source?: string; fetchedAt?: string; history?:HistorySummary; kind: 'answer' | 'clarify' | 'unavailable' };
 const placeSchema = z.object({id:z.number().int(),name:z.string(),latitude:z.number().min(-90).max(90),longitude:z.number().min(-180).max(180),admin1:z.string(),country_code:z.string(),admin2:z.string().optional()});
 const cache = new Map<string,{until:number;data:unknown}>();
 export function indiaDate(now = new Date()) { return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).format(now); }
@@ -106,5 +107,6 @@ export async function askWeather(message:string,lang:Language,context?:{place?:P
   place??=context?.place;
   if(!place)return {kind:'clarify',text:ta?'தமிழ்நாட்டில் எந்த இடத்திற்கு வானிலை வேண்டும்? உதாரணம்: “நாளை தாம்பரத்தில் வானிலை எப்படி இருக்கும்?”':'Which Tamil Nadu location do you mean? For example: “How is the weather in Tambaram tomorrow?”'};
   const date=override?.date??parsed.date??context?.date??indiaDate();
-  return weatherAnswer(place,date,lang);
+  try{return await weatherAnswer(place,date,lang);}
+  catch{return {kind:'unavailable',place,date,text:ta?'இணைய தினசரி முன்னறிவிப்பு தற்போது கிடைக்கவில்லை. கீழே கிடைக்கும் வரலாற்று ஒப்பீடு உண்மையான தினசரி முன்னறிவிப்புக்கு மாற்றாகாது.':'The daily internet forecast is unavailable right now. Any historical comparison below is seasonal context, not a replacement daily forecast.'};}
 }
