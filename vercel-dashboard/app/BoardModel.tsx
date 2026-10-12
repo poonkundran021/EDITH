@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { orientationBlend } from "../lib/motion";
 type Props = { quaternion: number[] | null; demo: boolean; zero: number; view: number };
 export default function BoardModel(props: Props) {
  const host=useRef<HTMLDivElement>(null),state=useRef(props);const [error,setError]=useState(false);
@@ -35,15 +36,15 @@ export default function BoardModel(props: Props) {
  box(.6,.55,.7,2.42,-.32,1.6,black);box(.11,.35,.45,2.75,-.3,1.6,mat(0xbf3f34));
  const ledMat=new THREE.MeshStandardMaterial({color:0x54fa9f,emissive:0x32e97e,emissiveIntensity:1});cylinder(.105,.32,-2.08,.26,-1.87,ledMat);
  for(const x of [-2,2])for(const z of [-1.9,1.9])cylinder(.07,.55,x,-.15,z,gold);
- let frame=0,lastZero=0,lastView=0;const reference=new THREE.Quaternion(),target=new THREE.Quaternion(),desired=new THREE.Quaternion();
+ let frame=0,lastZero=0,lastView=0,lastFrame=performance.now();const reference=new THREE.Quaternion(),target=new THREE.Quaternion(),desired=new THREE.Quaternion();
  // Right-handed IMU XYZ to model X,-Z,Y; sensor board normal becomes model +Y.
  const basis=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/2),invBasis=basis.clone().invert();
  const observer=new ResizeObserver(()=>{const w=el.clientWidth,h=el.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();});observer.observe(el);
- const animate=()=>{const s=state.current;
+ const animate=(time:number)=>{const s=state.current,dt=(time-lastFrame)/1000;lastFrame=time;
  if(s.quaternion){const [w,x,y,z]=s.quaternion;target.set(x,y,z,w).normalize();target.premultiply(basis).multiply(invBasis);}
  if(lastZero!==s.zero){reference.copy(target).invert();lastZero=s.zero;}
  if(lastView!==s.view){camera.position.set(7,8,9);controls.target.set(0,0,0);lastView=s.view;}
- board.quaternion.slerp(desired.copy(reference).multiply(target),.2);ledMat.emissiveIntensity=1;controls.update();renderer.render(scene,camera);frame=requestAnimationFrame(animate);};frame=requestAnimationFrame(animate);
+ board.quaternion.slerp(desired.copy(reference).multiply(target),orientationBlend(dt));ledMat.emissiveIntensity=1;controls.update();renderer.render(scene,camera);frame=requestAnimationFrame(animate);};frame=requestAnimationFrame(animate);
  return()=>{cancelAnimationFrame(frame);observer.disconnect();controls.dispose();scene.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose());}});grid.geometry.dispose();(grid.material as THREE.Material).dispose();renderer.dispose();renderer.domElement.remove();};
  },[]);
  return <div className="board-canvas" ref={host} role="img" aria-label="Interactive 3D replica of the EDITH sensor board">{error&&<div className="webgl-error">3D requires WebGL. Sensor readings remain available.</div>}</div>;
