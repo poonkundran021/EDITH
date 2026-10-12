@@ -1,7 +1,8 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowUpRight, CalendarDays, CloudSun, MapPin, Send, Volume2, VolumeX, Sparkles } from 'lucide-react';
+import { ArrowUpRight, CalendarDays, CloudSun, MapPin, Mic, Square, Send, Volume2, VolumeX, Sparkles } from 'lucide-react';
 import { askWeather, indiaDate, searchPlaces, type Language, type Place, type WeatherReply } from '../lib/weather';
+import { useDictation } from './useDictation';
 
 import { prepareLocalSpeech, speakLocally, stopLocalSpeech } from '../lib/local-speech';
 type Message = {id:number;role:'user'|'assistant';text:string;lang:Language;reply?:WeatherReply};
@@ -9,6 +10,7 @@ export default function WeatherChat(){
  const [lang,setLang]=useState<Language>('en'),[message,setMessage]=useState(''),[messages,setMessages]=useState<Message[]>([]),[busy,setBusy]=useState(false),[query,setQuery]=useState(''),[places,setPlaces]=useState<Place[]>([]),[place,setPlace]=useState<Place>(),[date,setDate]=useState(''),[searching,setSearching]=useState(false),[searchNote,setSearchNote]=useState(''),[autoSpeak,setAutoSpeak]=useState(true),[voices,setVoices]=useState<SpeechSynthesisVoice[]>([]),[speaking,setSpeaking]=useState(false),[voiceNote,setVoiceNote]=useState('');
  const context=useRef<{place?:Place;date?:string}>({}),seq=useRef(0),bottom=useRef<HTMLDivElement>(null),utterance=useRef<SpeechSynthesisUtterance|null>(null),alive=useRef(true);
  const ta=lang==='ta';
+ const dictation=useDictation(lang,message,setMessage);
  const voice=voices.find(v=>v.lang.toLowerCase()===(ta?'ta-in':'en-in'))??voices.find(v=>v.lang.toLowerCase().startsWith(lang));
  useEffect(()=>{alive.current=true;const synth=window.speechSynthesis;const update=()=>setVoices(synth?.getVoices()??[]);update();synth?.addEventListener('voiceschanged',update);return()=>{alive.current=false;synth?.removeEventListener('voiceschanged',update);synth?.cancel();stopLocalSpeech();};},[]);
  useEffect(()=>{const log=bottom.current?.parentElement;if(messages.length&&log)log.scrollTo({top:log.scrollHeight,behavior:'smooth'});},[messages,busy]);
@@ -20,7 +22,7 @@ export default function WeatherChat(){
  },[query,ta]);
  function stop(){stopLocalSpeech();if('speechSynthesis' in window)window.speechSynthesis.cancel();setSpeaking(false);utterance.current=null;}
  function speak(text:string,language:Language){
-   stop();setVoiceNote('');
+   dictation.cancel();stop();setVoiceNote('');
    const selected=voices.find(v=>v.lang.toLowerCase()===(language==='ta'?'ta-in':'en-in'))??voices.find(v=>v.lang.toLowerCase().startsWith(language));
    if(!('speechSynthesis' in window)||!selected){
      setVoiceNote(language==='ta'?'இலவச உள்ளூர் தமிழ் குரலைத் தயாரிக்கிறேன்…':'Preparing the free local voice…');
@@ -32,7 +34,7 @@ export default function WeatherChat(){
    window.speechSynthesis.speak(u);
  }
  async function send(text=message, chosen?:Place, chosenDate?:string){
-   if(busy||!text.trim())return;stop();if(autoSpeak&&!voice){try{prepareLocalSpeech();}catch{}}setBusy(true);setMessage('');const language=lang;
+   if(busy||!text.trim())return;dictation.cancel();stop();if(autoSpeak&&!voice){try{prepareLocalSpeech();}catch{}}setBusy(true);setMessage('');const language=lang;
    setMessages(m=>[...m.slice(-15),{id:++seq.current,role:'user',text:text.trim(),lang:language}]);
    try{
      const reply=await askWeather(text,language,{place:place??context.current.place,date:date||context.current.date},chosen?{place:chosen,date:chosenDate}:undefined);
@@ -47,7 +49,7 @@ export default function WeatherChat(){
   <div className="weather-intro"><span className="section-kicker"><CloudSun size={15}/> YOUR TAMIL NADU WEATHER COMPANION</span><h2 id="weather-title">{ta?'திட்டமிடுங்கள். வானிலையை அறியுங்கள்.':'A little weather wisdom.'}</h2><p>{ta?'தமிழ்நாட்டில் உங்கள் அடுத்த பயணத்திற்கு இணைய வானிலை. இடம், தேதி சொல்லுங்கள் — ஒன்றாகத் திட்டமிடலாம்.':'An outing in Ooty? An evening in Tambaram? Ask about your plans, and get an internet weather outlook.'}</p><span className="weather-source-pill"><span className="dot"/>{ta?'இணைய வானிலை · சென்சார் தரவு அல்ல':'INTERNET WEATHER · INDEPENDENT OF YOUR SENSORS'}</span></div>
   <div className="weather-grid">
    <aside className="weather-controls">
-    <div className="weather-language" role="group" aria-label="Response language"><button className={!ta?'active':''} onClick={()=>{stop();setLang('en');setVoiceNote('');}}>English</button><button className={ta?'active':''} onClick={()=>{stop();setLang('ta');setVoiceNote('');}}>தமிழ்</button></div>
+    <div className="weather-language" role="group" aria-label="Response language"><button className={!ta?'active':''} onClick={()=>{dictation.cancel();stop();setLang('en');setVoiceNote('');}}>English</button><button className={ta?'active':''} onClick={()=>{dictation.cancel();stop();setLang('ta');setVoiceNote('');}}>தமிழ்</button></div>
     <label className="weather-field"><span><MapPin size={14}/>{ta?'இடத்தைத் தேர்ந்தெடுக்கவும்':'Choose a place (optional)'}</span><input value={query} onChange={e=>setQuery(e.target.value)} placeholder={ta?'நகரம் / ஊர் தேடவும்':'Search Tamil Nadu towns…'} maxLength={80}/></label>
     {searching&&<p className="weather-small" role="status">{ta?'தேடுகிறது…':'Searching…'}</p>}{searchNote&&<p className="weather-small" role="status">{searchNote}</p>}
     {!!places.length&&<div className="weather-places">{places.map(p=><button key={p.id} onClick={()=>{setPlace(p);setQuery('');setPlaces([]);}}><strong>{p.name}</strong><small>{p.admin2??p.admin1}</small></button>)}</div>}
@@ -66,7 +68,18 @@ export default function WeatherChat(){
      {messages.map(m=><article className={`weather-message ${m.role}`} key={m.id} lang={m.lang}><span className="weather-message-label">{m.role==='user'?(m.lang==='ta'?'நீங்கள்':'YOU'):'EDITH'}</span><p>{m.text}</p>{m.reply?.choices?.map(p=><button className="weather-choice" key={p.id} disabled={busy} onClick={()=>send(`${p.name} · Tamil Nadu`,p,m.reply?.date)}>{p.name} · {p.admin2??p.admin1}</button>)}{m.role==='assistant'&&<div className="weather-message-tools"><button onClick={()=>speak(m.text,m.lang)}><Volume2 size={13}/>{m.lang==='ta'?'கேட்க':'Listen'}</button>{m.reply?.source&&<a href={m.reply.source} target="_blank" rel="noreferrer">Open-Meteo ↗</a>}{m.reply?.fetchedAt&&<small>{new Date(m.reply.fetchedAt).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Kolkata'})} IST</small>}</div>}</article>)}
      {busy&&<div className="weather-thinking" role="status">{ta?'இணைய வானிலையைப் பார்க்கிறேன்…':'Checking internet weather…'}</div>}<div ref={bottom}/>
     </div>
-    <form className="weather-compose" onSubmit={e=>{e.preventDefault();void send();}}><label className="weather-input-label" htmlFor="weather-question">{ta?'வானிலை கேள்வி':'Your weather question'}</label><div><textarea id="weather-question" rows={2} maxLength={600} value={message} disabled={busy} onChange={e=>setMessage(e.target.value)} placeholder={ta?'எங்கே, எப்போது செல்லத் திட்டமிடுகிறீர்கள்?':'Ask about a place, date, or your outdoor plans…'} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();void send();}}}/><button disabled={busy||!message.trim()} aria-label={ta?'அனுப்பு':'Send weather question'}><Send size={18}/></button></div><small>{ta?'தமிழ் அல்லது ஆங்கிலத்தில் கேளுங்கள். இது வானிலை உதவியாளர்; பொது அறிவு AI அல்ல.':'Ask in English or Tamil. Weather questions and follow-ups supported; not a general-purpose AI.'}</small></form>
+    <form className="weather-compose" onSubmit={e=>{e.preventDefault();if(!dictation.active)void send();}}>
+     <label className="weather-input-label" htmlFor="weather-question">{ta?'தட்டச்சு செய்யுங்கள் அல்லது பேசுங்கள்':'Type it. Or say it.'}</label>
+     <div><textarea id="weather-question" rows={2} maxLength={600} value={message} disabled={busy} readOnly={dictation.active} aria-describedby="weather-mic-note" onChange={e=>setMessage(e.target.value)} placeholder={ta?'எங்கே, எப்போது செல்லத் திட்டமிடுகிறீர்கள்?':'Ask about a place, date, or your outdoor plans…'} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();if(!dictation.active)void send();}}}/><button disabled={busy||dictation.active||!message.trim()} aria-label={ta?'அனுப்பு':'Send weather question'}><Send size={18}/></button></div>
+     <div className="weather-dictation">
+      <button type="button" className={`weather-mic ${dictation.active?'recording':''}`} disabled={busy||!dictation.supported||dictation.state==='finishing'} aria-pressed={dictation.active} onClick={()=>{if(dictation.active)dictation.stop();else{stop();setVoiceNote('');dictation.start();}}}>
+       {dictation.active?<Square size={15}/>:<Mic size={17}/>}<span>{dictation.active?(ta?'பேச்சை முடிக்கவும்':'Finish speaking'):(ta?'தமிழில் பேசுங்கள்':'Speak in English')}</span>
+      </button><span>{ta?'பேசுங்கள் → சரிபாருங்கள் → அனுப்புங்கள்':'Speak → review → send'}</span>
+     </div>
+     <p id="weather-mic-note" className={`weather-mic-note ${dictation.active?'active':''}`} role="status">{dictation.note}</p>
+     <small>{ta?'மைக் பொத்தானை அழுத்தும்போது மட்டுமே கேட்கும். உலாவி பேச்சை இணையச் சேவைக்கு அனுப்பலாம். API கட்டணம் இல்லை.':'Listens only when you tap the mic. Your browser may send audio to its speech service. No paid API.'}</small>
+     <small>{ta?'தமிழ் அல்லது ஆங்கிலத்தில் கேளுங்கள். இது வானிலை உதவியாளர்; பொது அறிவு AI அல்ல.':'Ask in English or Tamil. Weather questions and follow-ups supported; not a general-purpose AI.'}</small>
+    </form>
    </div>
   </div>
  </section></>;

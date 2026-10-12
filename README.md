@@ -79,6 +79,10 @@ See [SETUP.md](SETUP.md) for pin mapping, calibration and the original Sites dep
 
 Use **Ask weather** on the Vercel dashboard. Select English or Tamil, ask about a town and date, or use the location search/date picker. Follow-up questions retain the last location/date; explicitly naming a new place or date replaces that part of the context.
 
+**Voice input:** Select English or தமிழ், tap **Speak in English / தமிழில் பேசுங்கள்**, allow microphone access, and speak your question. Tap **Finish speaking** or wait for the browser to finish. Review/edit the place and date in the transcript, then press **Send**. The existing read-aloud option speaks the reply. No ESP32 firmware change or API key is required.
+
+Microphone input uses the browser's Web Speech recognition service (`en-IN` / `ta-IN`), which varies by browser and language. Use HTTPS (or localhost for development). Unsupported browsers keep typed input available; permission, network, and missing-microphone errors are explained. Recognition starts only after a click, stops after a single utterance or at 30 seconds, and is cancelled when leaving the page, changing language, or playing a reply. Your browser may send audio to its own online speech service; EDITH does not upload or store audio. No paid recognition fallback is configured. See [browser speech recognition support and privacy](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition).
+
 - Internet weather comes directly from Open-Meteo in the visitor's browser. It never uses the ESP32 sensor values. Current values are weather-model estimates, not a local observation station measurement.
 - GeoNames results are restricted to `country_code=IN` and `admin1=Tamil Nadu`. Common English/Tamil place aliases are understood; use the search field for other towns. Ambiguous results require a selection.
 - Forecasts cover today through 15 days ahead. Later dates get an availability explanation rather than an invented forecast. Dates use IST; numeric dates use day/month/year. This is a weather-specific parser, not an unrestricted LLM chatbot.
